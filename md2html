@@ -1,0 +1,192 @@
+#!/usr/bin/python
+
+import sys
+
+
+in_paragraph = True
+in_code_block = False
+in_comment_block = False
+has_subsection = False
+bold = False
+verbatim = False
+italics = False
+bold_italics = False
+pos = None
+tag = None
+index = [0, 0]
+
+contents = '<section class="slide title"><div class=animate id="slide0">\n'
+buffer = ''
+
+def convert2html (text):
+  return text.replace('<', '&lt;').replace('>', '&gt;').replace ('\\\\', '<br>')
+
+def attr():
+  global pos
+  global tag
+
+  attr = ''
+  if pos:
+    attr = f' style="position: absolute; {pos}"'
+  if tag:
+    attr += f' data-tag={tag}'
+
+  pos = None
+  tag = None
+
+  return attr
+
+def expand_img (text):
+  fragments = text.split('![')
+  print (fragments)
+  output = fragments[0]
+  for f in fragments[1:]:
+    f2 = f.split('](', maxsplit=1)
+    if len(f2) != 2:
+      raise RuntimeError (f'error parsing image tag in "{text}"')
+    f3 = f2[1].split(')', maxsplit=1)
+    output += f'<img src="{f3[0]}" alt="{f2[0]}" {attr()}>'
+    if len(f3) > 1:
+      output += f3[1]
+  return output
+
+
+def markup(text, delimiter, start, end):
+  fragments = text.split (delimiter)
+  text=''
+  flag = False
+  for f in fragments[:-1]:
+    text += f
+    if flag:
+      text += end
+    else:
+      text += start
+    flag = not flag
+  return ( text + fragments[-1], flag )
+
+
+def interpret(text):
+  if len(text) == 0:
+    return text
+
+  text = convert2html (text)
+  text = expand_img (text)
+
+  text, bold_italics = markup (text, '***', '<strong><em>', '</em></strong>')
+  text, bold = markup (text, '**', '<strong>', '</strong>')
+  text, italics = markup (text, '*', '<em>', '</em>')
+  text, verbatim = markup (text, '`', '<code>', '</code>')
+
+  return text
+
+
+def not_in_comment():
+  global in_comment_block
+  global contents
+  global buffer
+  if in_comment_block:
+    contents += f'<div class=note {attr()}>\n{interpret(buffer)}\n</div>\n'
+    in_comment_block = False
+    buffer = ''
+
+def not_in_paragraph():
+  global in_paragraph
+  global contents
+  global buffer
+  if in_paragraph:
+    contents += f'<p {attr()}>\n{interpret(buffer)}\n</p>\n'
+    in_paragraph = False
+    buffer = ''
+
+def not_in_code_block():
+  global in_code_block
+  global contents
+  global buffer
+  if in_code_block:
+    contents += f'<pre {attr()}><code>\n{convert2html(buffer)}\n</code></pre>\n'
+    in_code_block = False
+    buffer = ''
+
+
+template = open(sys.argv[2], 'r', encoding='utf-8').read()
+
+with open(sys.argv[1], 'r', encoding='utf-8') as fd:
+  title = fd.readline().strip()
+  description = fd.readline().strip()
+
+  for line in fd.readlines():
+    line = line.rstrip()
+
+    if line.startswith('```'):
+      not_in_comment()
+      not_in_paragraph()
+      if in_code_block:
+        not_in_code_block()
+      else:
+        in_code_block = True
+      continue
+
+    if in_code_block:
+      buffer += line + '\n'
+      continue
+
+    if len(line) == 0:
+      not_in_comment()
+      not_in_paragraph()
+      contents += '\n'
+      continue
+
+    if line[0] == '#':
+      not_in_comment()
+      not_in_paragraph()
+      level = 1
+      while line[level] == '#': level += 1
+      line = line[level:]
+      contents += f'<h{level}>{interpret(line)}</h{level}>\n'
+      continue
+
+    if line == '---':
+      not_in_comment()
+      not_in_paragraph()
+      index[0] += 1;
+      contents += f'</div></section>\n\n<section class=slide><div class=animate id=slide{index[0]}>\n'
+      continue
+
+    if line == '--':
+      not_in_comment()
+      not_in_paragraph()
+      index[1] += 1;
+      contents += f'</div>\n\n<div class=animate id=slide{index[0]}-{index[1]}>\n'
+      continue
+
+    if line.startswith('@'):
+      not_in_comment()
+      items = line[1:].split('(', maxsplit=2)
+      if len(items[0]):
+        tag = items[0]
+      if len(items)>1:
+        pos=items[1].split(')')[0]
+      continue
+
+    if line.startswith('>'):
+      not_in_paragraph()
+      in_comment_block = True
+      buffer += line[1:] + '\n'
+      continue
+
+    print (f'"{line}"')
+
+    not_in_comment()
+    buffer += line + '\n'
+    in_paragraph = True
+
+if in_comment_block:
+  contents += '</div>\n'
+
+contents += '</div></section>\n'
+
+with open(sys.argv[3], 'w', encoding='utf-8') as fd:
+  fd.write (template.replace ('##TITLE##', title).replace ('##DESCRIPTION##', description).replace ('##CONTENT##', contents))
+
+
+
