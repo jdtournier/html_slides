@@ -20,7 +20,10 @@ body {
   position: relative;
   width: min(100vw, 100vh*16/9);
   height: min(100vh, 100vw*9/16);
-  margin: max(0vh, (100vh - 100vw*9/16)/2) max(0vw, (100vw - 100vh*16/9)/2);
+  margin: max(0vh, 50vh - 50vw*9/16) max(0vw, 50vw - 50vh*16/9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: min(2.5vw, 2.5vh*16/9);
   font-family: 'Droid Sans';
   text-align: justify;
@@ -72,18 +75,18 @@ svg {
   position: absolute;
   left: 0;
   top: 0;
-  width: 100vw;   /* 100% of the viewport width */
-  height: calc(100vw * 9.0/16.0);   /* 50% of the viewport height */
+  width: min(100vw, 100vh*16/9);
+  height: min(100vh, 100vw*9/16);
   display: block;
 }
 
-svg.arrow path {
+svg.arrow path,
+svg.arrow line {
   stroke: #000000;
-  stroke-width: 4px;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
-  filter: drop-shadow(12px 12px 8px #888888);
+  filter: drop-shadow(2px 2px 2px #888888);
   marker-end: url(#global-arrowhead);
 }
 
@@ -91,9 +94,9 @@ svg.arrow path {
   position: absolute;
 }
 .center-img {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 blockquote {

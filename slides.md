@@ -12,7 +12,7 @@ author: J-Donald Tournier
 
 # First slide
 
-@.abs(right: 10%; bottom: 10%)
+@[right: 10%; bottom: 10%]
 Here we talk about *something*, and show **some code**
 
 --
@@ -35,7 +35,7 @@ int main ()
 Here we talk about something else
 
 
-@.abs(left: 20%; top: 30%)
+@ "code" [left: 20%; top: 30%]
 ```
 #include <iostream>
 
@@ -47,18 +47,22 @@ int main (int argc, char* argv[])
 ```
 --
 
-> @note.abs(right:10%; top: 20%)
+> @ "note" [right:10%; top: 20%]
 > We can print to the terminal using <br>
 > the `std::cout` **output 
 > stream**
 >
 > and another line
 
+
+@ arrow "note(-.1,.9)-code(.53,.47)"
+
 ---
 
 # Meet the team
 
-![Donald's mug](@donald.col center-img(width: 20%; height: auto; align: center)assets/donald.jpg)
+@"donald" col center-img[width: 20%; height: auto; align: center]
+![Donald's mug](assets/donald.jpg)
 
 > with another blockquote
 > for completeness

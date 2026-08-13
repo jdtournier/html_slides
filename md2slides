@@ -26,7 +26,6 @@ class SectionWrapperProcessor(Treeprocessor):
 
     # Iterate through all top-level child elements of the flat markdown output
     for child in list(root):
-      print (child.tag, child.text)
       if child.tag == 'hr':
         slide_num += 1
         anim_num = 0
@@ -47,44 +46,45 @@ class SectionWrapperProcessor(Treeprocessor):
 
   def parse_style (self, text):
     if text and text.startswith('@'):
-      parts = text[1:].split('(', maxsplit=1)
-      tag = parts[0]
-      text = parts[1] if len(parts)>1 else None
-      cl = None
-      pos = None
-      if len(tag):
-        parts = tag.split('.', maxsplit=1)
-        tag = parts[0]
-        cl = parts[1] if len(parts)>1 else None
-      if len(text):
-        parts = text.split(')',maxsplit=1)
-        pos = parts[0]
-        text = parts[1] if len(parts)>1 else None
+      lines = text.splitlines()
+      text = '\n'.join (lines[1:]) if len(lines)>1 else None
+
+      style = lines[0][1:].strip()
+
+      pattern = r'"([^"]*)"'
+      match = re.search(pattern, style)
+      tag = match.group(1) if match else None
+      style = re.sub(r'\s*"[^"]*"\s*', '', style).strip()
+
+      pattern = r'\[([^\]]*)\]'
+      match = re.search(pattern, style)
+      pos = match.group(1) if match else None
+      cl = re.sub(r'\s*\[[^\]]*\]\s*', '', style).strip()
+      if cl is not None and len(cl) == 0:
+        cl = None
+
       return ( text, cl, tag, pos )
     return ( text, None, None, None )
 
   def update_style (self, node, cl, tag, pos):
     if cl: node.set ('class', cl)
     if tag: node.set ('data-tag', tag)
-    if pos: node.set ('style', pos)
+    if pos:
+      if any (m in pos for m in ['left', 'right', 'top', 'bottom']):
+        pos = 'position: absolute; ' + pos
+      node.set ('style', pos)
 
   def add_style (self, parent, node):
-    print (f'styling {node.tag}: "{node.text}", with parent {parent.tag}')
 
-    if node.tag == 'img':
-      src, cl, tag, pos = self.parse_style (node.get ('src'))
-      node.set ('src', src)
-    else:
-      node.text, cl, tag, pos = self.parse_style (node.text)
+    node.text, cl, tag, pos = self.parse_style (node.text)
 
     if parent.tag == 'blockquote' and node.tag == 'p':
       self.update_style (parent, cl, tag, pos)
-    elif parent.tag == 'p' and node.tag == 'pre':
-      print ('updating p pre')
+    elif parent.tag == 'p' and ( node.tag == 'pre' or node.tag == 'img' ):
       for attr in ( 'class', 'style', 'data-tag' ):
         if parent.get(attr):
           node.set (attr, parent.get(attr))
-          parent.clear (attr)
+          parent.attrib.pop (attr, None)
     else:
       self.update_style (node, cl, tag, pos)
 
@@ -139,9 +139,9 @@ class ClearPreStylesExtension(Extension):
 
 
 
-# ==========================================
-# Test Drive
-# ==========================================
+########################################
+#        Run conversion
+########################################
 
 fm = {}
 with open (sys.argv[1], 'r') as fd:
@@ -154,9 +154,6 @@ with open (sys.argv[1], 'r') as fd:
       fm[key.strip()] = value.strip()
 
   md_text = fd.read()
-
-print (fm)
-print ('--------------------')
 
 # Compile the Markdown with our custom extension
 contents = markdown.markdown(md_text, extensions=['fenced_code', SectionWrapperExtension(), ClearPreStylesExtension()])

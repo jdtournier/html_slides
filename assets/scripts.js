@@ -73,8 +73,70 @@ document.body.addEventListener('keydown', process_key, false);
 document.addEventListener('click', next_slide, false);
 document.addEventListener('wheel', on_scroll, false);
 
+setTimeout(() => {
+  console.log("Highlight.js is completely done and layout is stable.");
+
+  const sections = document.querySelectorAll ('section.slide');
+  sections.forEach ((section) => {
+    const arrows = section.querySelectorAll('p.arrow');
+    arrows.forEach((p) => {
+      const regex = /^([^(]+)\(([^,]+),([^)]+)\)-([^(]+)\(([^,]+),([^)]+)\)$/;
+      const match = p.getAttribute('data-tag').match (regex);
+
+      // Destructure the matched string segments
+      const [_, tagA, xAs, yAs, tagB, xBs, yBs] = match;
+      const fxA = parseFloat (xAs);
+      const fyA = parseFloat (yAs);
+      const fxB = parseFloat (xBs);
+      const fyB = parseFloat (yBs);
+
+      console.log (`(path from ${tagA} (${fxA},${fyA}) to ${tagB} (${fxB},${fyB})`);
+
+      const body = document.querySelector('body').getBoundingClientRect();
+      const boxA = section.querySelector(`[data-tag="${tagA}"]`);
+      const boxB = section.querySelector(`[data-tag="${tagB}"]`);
+      const rectA = boxA.getBoundingClientRect();
+      const rectB = boxB.getBoundingClientRect();
+      console.log ('body:', body.left, body.right, body.top, body.bottom);
+      console.log ('box A:', rectA.left, rectA.right, rectA.top, rectA.bottom, 'width:', rectA.width);
+      console.log ('box B:', rectB.left, rectB.right, rectB.top, rectB.bottom, 'width:', rectB.width, boxB.offsetWidth);
+
+      console.log ('posA:', 
+        rectA.left + fxA * (rectA.right - rectA.left) - body.left, 
+        rectA.top + fyA * (rectA.bottom - rectA.top) - body.top,
+        'posB:',
+        rectB.left + fxB * (rectB.right - rectB.left) - body.left,
+        rectB.top + fyB * (rectB.bottom - rectB.top) - body.top);
+
+
+      const sx = 384 / (body.right - body.left);
+      const sy = 216 / (body.bottom - body.top);
+
+      const xA = sx * ( rectA.left + fxA * (rectA.right - rectA.left) - body.left);
+      const yA = sy * ( rectA.top + fyA * (rectA.bottom - rectA.top) - body.top);
+      const xB = sx * ( rectB.left + fxB * (rectB.right - rectB.left) - body.left);
+      const yB = sy * ( rectB.top + fyB * (rectB.bottom - rectB.top) - body.top);
+      console.log ('posA:', xA, yA, 'posB', xB, yB);
+
+      const svg = document.createElementNS ('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute ('class', 'arrow');
+      svg.setAttribute ('viewBox', '0 0 384 216');
+
+      const line = document.createElementNS ('http://www.w3.org/2000/svg', 'path');
+      line.setAttribute ('d', `M ${xA} ${yA} L ${xB} ${yB}`);
+
+      svg.append(line);
+      p.replaceWith (svg);
+
+      // Example action: Add a style or modify text
+      p.style.color = 'blue';
+    });
+  });
+
+}, 100);
+
+
 if (!window.location.hash) {
   first_slide();
 }
-//ensure_visible();
 
