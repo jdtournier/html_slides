@@ -1,5 +1,8 @@
-Intro to C++
-Slide to get started in C++
+---
+title: Intro to C++
+description: Slide to get started in C++
+author: J-Donald Tournier
+---
 
 # Intro to C++
 ## Session 1A
@@ -9,7 +12,7 @@ Slide to get started in C++
 
 # First slide
 
-@(right: 10%; bottom: 10%)
+@.abs(right: 10%; bottom: 10%)
 Here we talk about *something*, and show **some code**
 
 --
@@ -32,7 +35,7 @@ int main ()
 Here we talk about something else
 
 
-@code(left: 20%; top: 30%)
+@.abs(left: 20%; top: 30%)
 ```
 #include <iostream>
 
@@ -43,15 +46,19 @@ int main (int argc, char* argv[])
 }
 ```
 --
-@note(right:10%; top: 20%)
-> We can print to the terminal using \\
+
+> @note.abs(right:10%; top: 20%)
+> We can print to the terminal using <br>
 > the `std::cout` **output 
 > stream**
+>
+> and another line
 
 ---
 
 # Meet the team
 
-@donald.col(width: 50%; height: auto)
-![Donald's mug](assets/donald.jpg)
+![Donald's mug](@donald.col center-img(width: 20%; height: auto; align: center)assets/donald.jpg)
 
+> with another blockquote
+> for completeness

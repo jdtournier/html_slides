@@ -87,8 +87,16 @@ svg.arrow path {
   marker-end: url(#global-arrowhead);
 }
 
-div.note {
+.abs {
   position: absolute;
+}
+.center-img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+blockquote {
   background-color: #fcebba;
   font-size: 0.7em;
   padding: 0.5em;

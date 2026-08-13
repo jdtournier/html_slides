@@ -1,0 +1,173 @@
+#!/usr/bin/python
+
+import sys
+import re
+import markdown
+from markdown.treeprocessors import Treeprocessor
+from markdown.postprocessors import Postprocessor
+from markdown.extensions import Extension
+import xml.etree.ElementTree as ET
+
+import markdown
+from markdown.treeprocessors import Treeprocessor
+from markdown.extensions import Extension
+import xml.etree.ElementTree as ET
+
+class SectionWrapperProcessor(Treeprocessor):
+  def run(self, root):
+    # Create a new blank root element to hold our restructured tree
+    new_root = ET.Element(root.tag, root.attrib)
+    slide_num = 0;
+    anim_num = 0;
+
+    # Start the very first section container
+    current_section = ET.SubElement(new_root, 'section', {'class': 'slide title'})
+    current_div = ET.SubElement(current_section, 'div', {'id': f'slide{slide_num}' } )
+
+    # Iterate through all top-level child elements of the flat markdown output
+    for child in list(root):
+      print (child.tag, child.text)
+      if child.tag == 'hr':
+        slide_num += 1
+        anim_num = 0
+        current_section = ET.SubElement(new_root, 'section', {'class': 'slide'})
+        current_div = ET.SubElement(current_section, 'div', {'id': f'slide{slide_num}' } )
+      elif child.tag == 'p' and child.text and child.text.strip() == '--':
+        anim_num += 1
+        current_div = ET.SubElement(current_section, 'div', {'id': f'slide{slide_num}-{anim_num}' } )
+      else:
+        current_div.append(self.add_style (current_div, child))
+
+    # Replace the contents of the old flat root with our newly structured tree
+    root.clear()
+    root.text = new_root.text
+    root.tail = new_root.tail
+    root.extend(list(new_root))
+    return root
+
+  def parse_style (self, text):
+    if text and text.startswith('@'):
+      parts = text[1:].split('(', maxsplit=1)
+      tag = parts[0]
+      text = parts[1] if len(parts)>1 else None
+      cl = None
+      pos = None
+      if len(tag):
+        parts = tag.split('.', maxsplit=1)
+        tag = parts[0]
+        cl = parts[1] if len(parts)>1 else None
+      if len(text):
+        parts = text.split(')',maxsplit=1)
+        pos = parts[0]
+        text = parts[1] if len(parts)>1 else None
+      return ( text, cl, tag, pos )
+    return ( text, None, None, None )
+
+  def update_style (self, node, cl, tag, pos):
+    if cl: node.set ('class', cl)
+    if tag: node.set ('data-tag', tag)
+    if pos: node.set ('style', pos)
+
+  def add_style (self, parent, node):
+    print (f'styling {node.tag}: "{node.text}", with parent {parent.tag}')
+
+    if node.tag == 'img':
+      src, cl, tag, pos = self.parse_style (node.get ('src'))
+      node.set ('src', src)
+    else:
+      node.text, cl, tag, pos = self.parse_style (node.text)
+
+    if parent.tag == 'blockquote' and node.tag == 'p':
+      self.update_style (parent, cl, tag, pos)
+    elif parent.tag == 'p' and node.tag == 'pre':
+      print ('updating p pre')
+      for attr in ( 'class', 'style', 'data-tag' ):
+        if parent.get(attr):
+          node.set (attr, parent.get(attr))
+          parent.clear (attr)
+    else:
+      self.update_style (node, cl, tag, pos)
+
+    for child in list(node):
+      self.add_style (node, child)
+
+    return node
+
+
+class SectionWrapperExtension(Extension):
+  def extendMarkdown(self, md):
+    # Register the processor with high priority so it runs right after the tree is built
+    md.treeprocessors.register(SectionWrapperProcessor(md), 'section_wrapper', 0)
+
+
+
+
+
+
+def move_attributes(match):
+  attributes = match.group(1)
+  # Return the clean swap: place the attributes onto the <pre> tag instead
+  return f'<pre{attributes}>'
+
+
+class PreTagStyleFixer(Postprocessor):
+  def run(self, html_text):
+    """
+    Regex looks for pairs like: <pre><code class="custom-class" style="border: 1px;">
+    And transforms them to:    <pre class="custom-class" style="border: 1px;"><code>
+    """
+    # Matches <pre> followed immediately by <code ...>
+    # Group 1: Everything inside the <code> tag attributes (class, style, id, etc.)
+    pattern = re.compile(r'<p([^>]*)></p>\n<pre>')
+
+    return pattern.sub(move_attributes, html_text)
+
+class ClearPreStylesExtension(Extension):
+  def extendMarkdown(self, md):
+    # Register the postprocessor to run at the absolute end of compilation
+    md.postprocessors.register(PreTagStyleFixer(md), 'pre_style_fixer', 0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ==========================================
+# Test Drive
+# ==========================================
+
+fm = {}
+with open (sys.argv[1], 'r') as fd:
+  line = fd.readline().rstrip()
+  if line == '---':
+    while True:
+      line = fd.readline().rstrip()
+      if line == '---': break;
+      key, value = line.split(':', maxsplit=1)
+      fm[key.strip()] = value.strip()
+
+  md_text = fd.read()
+
+print (fm)
+print ('--------------------')
+
+# Compile the Markdown with our custom extension
+contents = markdown.markdown(md_text, extensions=['fenced_code', SectionWrapperExtension(), ClearPreStylesExtension()])
+
+
+template = open(sys.argv[2], 'r', encoding='utf-8').read()
+
+with open(sys.argv[3], 'w', encoding='utf-8') as fd:
+  for k,v in fm.items():
+    template = template.replace(f'##{k.upper()}##', v)
+  fd.write (template.replace ('##CONTENT##', contents))
+
+
+

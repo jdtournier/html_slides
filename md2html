@@ -108,11 +108,16 @@ def not_in_code_block():
     buffer = ''
 
 
-template = open(sys.argv[2], 'r', encoding='utf-8').read()
 
+fm = {}
 with open(sys.argv[1], 'r', encoding='utf-8') as fd:
-  title = fd.readline().strip()
-  description = fd.readline().strip()
+  line = fd.readline().rstrip()
+  if line == '---':
+    while True:
+      line = fd.readline().rstrip()
+      if line == '---': break;
+      key, value = line.split(':', maxsplit=1)
+      fm[key.strip()] = value.strip()
 
   for line in fd.readlines():
     line = line.rstrip()
@@ -185,8 +190,12 @@ if in_comment_block:
 
 contents += '</div></section>\n'
 
+template = open(sys.argv[2], 'r', encoding='utf-8').read()
+
 with open(sys.argv[3], 'w', encoding='utf-8') as fd:
-  fd.write (template.replace ('##TITLE##', title).replace ('##DESCRIPTION##', description).replace ('##CONTENT##', contents))
+  for k,v in fm.items():
+    template = template.replace(f'##{k.upper()}##', v)
+  fd.write (template.replace ('##CONTENT##', contents))
 
 
 
