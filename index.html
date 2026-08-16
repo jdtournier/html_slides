@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <title>Intro to C++</title>
+  <meta name="description" content="Slide to get started in C++">
+  <meta name="author" content="J-Donald Tournier">
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./assets/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/cpp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/bash.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</head><body>
+ <svg>
+  <defs>
+    <marker id="global-arrowhead"
+            viewBox="0 0 120 160"
+            refX="30"
+            refY="50"
+            markerWidth="5"
+            markerHeight="5"
+            orient="auto-start-reverse">
+      <path d="M 0 10 L 100 50 L 0 90 z" stroke-width="0" fill="context-stroke" />
+    </marker>
+  </defs>
+</svg>
+
+<section class="slide title"><div id="slide0"><h1>Intro to C++</h1>
+<h2>Session 1A</h2>
+<h3>5CCYB041 - Introduction to C++</h3>
+</div></section><section class="slide"><div id="slide1"><h1>First slide</h1>
+<p style="position: absolute; right: 10%; bottom: 10%">Here we talk about <em>something</em>, and show <strong>some code</strong></p>
+</div><div id="slide1-1"><pre><code>#include &lt;iostream&gt;
+
+int main () 
+{
+  std::cout &lt;&lt; &quot;Hello World\n&quot;;
+  return 0;
+}
+</code></pre>
+</div></section><section class="slide"><div id="slide2"><h1>Second slide</h1>
+<p>Here we talk about something else</p>
+<pre data-tag="code" style="position: absolute; left: 20%; top: 30%"><code>#include &lt;iostream&gt;
+
+int main (int argc, char* argv[]) 
+{
+  std::cout &lt;&lt; &quot;Hello World: &quot; &lt;&lt; argv[1] &lt;&lt; &quot;\n&quot;;
+  return 0;
+}
+</code></pre>
+</div><div id="slide2-1"><blockquote data-tag="note" style="position: absolute; right:10%; top: 20%">
+<p>We can print to the terminal using <br>
+the <code>std::cout</code> <strong>output 
+stream</strong></p>
+<p>and another line</p>
+</blockquote>
+<p class="arrow" data-tag="note(-.1,.9)-code(.53,.47)"></p>
+</div></section><section class="slide"><div id="slide3"><h1>Meet the team</h1>
+<p><img alt="Donald's mug" class="col center-img" data-tag="donald" src="assets/donald.jpg" style="width: 20%; height: auto; align: center" /></p>
+<blockquote>
+<p>with another blockquote
+for completeness</p>
+</blockquote>
+</div></section>
+
+<script src="./assets/scripts.js"></script></body></html>
